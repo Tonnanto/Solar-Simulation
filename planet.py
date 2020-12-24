@@ -2,6 +2,7 @@ from vpython import *
 from astro_object import Astro_Object
 from orbit import calc_days
 from datetime import datetime
+from settings import Settings
 
 
 class Planet(Astro_Object):
@@ -11,7 +12,7 @@ class Planet(Astro_Object):
         self.home = home
         self.dist = dist
         self.orbit = orbit
-        self.orbit.draw(100, self.color)
+        self.orbit.draw(1000, self.color)
         self.move(datetime.now())
 
     # def drawOrbit(self, corners):
@@ -35,7 +36,10 @@ class Planet(Astro_Object):
 
         loc = self.orbit.get_loc(radians(E))
 
+        # Adjust Scene center if planet is focused
         self.sphere.pos = loc
+        if Settings.center_object == self:
+            scene.center = self.sphere.pos
 
         self.updateLabel()
 

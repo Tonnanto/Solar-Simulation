@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from orbit import Orbit
 from planet import *
+from settings import Settings
 
 scene.title = "Solar System"
 scene.width = 2400
@@ -14,6 +15,7 @@ scene.height = 1100
 scrollToZoom = False
 
 sun = Astro_Object(name="Sun", radius=696340, color=color.yellow)
+Settings.center_object = sun
 
 planets = []
 
@@ -64,9 +66,11 @@ def date_submitted(b: button):
         day = int(day_text.text)
         month = int(month_text.text)
         year = int(year_text.text)
-        date = datetime(day=day, month=month, year=year)
+        hour = int(hour_text.text)
+        minute = int(minute_text.text)
+        date = datetime(day=day, month=month, year=year, hour=hour, minute=minute)
 
-        print(date.strftime("%d.%m.%Y"))
+        print(date.strftime("%d.%m.%Y  %H:%M"))
 
         for planet in planets:
             planet.move(date)
@@ -87,6 +91,32 @@ def year_text_changed(t: winput):
     print(t.text)
 
 
+def focus_object(b: button):
+    if b.text == "Sun":
+        Settings.center_object = sun
+        scene.center = sun.sphere.pos
+        return
+
+    for planet in planets:
+        if planet.name == b.text:
+            Settings.center_object = planet
+            scene.center = planet.sphere.pos
+
+
+def play_button_clicked(b: button):
+    Settings.play = not Settings.play
+    if Settings.play:
+        play_button.text = "⏵"
+    else:
+        play_button.text = "⏸"
+
+
+def timescale_changed(s: slider):
+    value = int(s.value * 100.0)
+    time_scale_text.text = " * 10 ^ " + str(value)
+    Settings.time_factor = 10 ** value
+
+
 def scroll_to_zoom_clicked(r):
     scrollToZoom = r.checked
 
@@ -103,18 +133,42 @@ def slider_moved(s):
 draw_planets()
 box()
 
+# Focus Object Buttons
 scene.append_to_caption('\n')
+wtext(text="Focus:  ")
+button(bind=focus_object, text="Sun")
+button(bind=focus_object, text="Mercury")
+button(bind=focus_object, text="Venus")
+button(bind=focus_object, text="Earth")
+button(bind=focus_object, text="Mars")
+button(bind=focus_object, text="Jupiter")
+button(bind=focus_object, text="Saturn")
+button(bind=focus_object, text="Uranus")
+button(bind=focus_object, text="Neptune")
+button(bind=focus_object, text="Pluto")
 
+# Date input and display
+scene.append_to_caption('\n\n')
+play_button = button(bind=play_button_clicked, text="⏸")
 day_text = winput(bind=day_text_changed, width=40, text=datetime.now().day)
 month_text = winput(bind=month_text_changed, width=40, text=datetime.now().month)
 year_text = winput(bind=year_text_changed, width=80, text=datetime.now().year)
+hour_text = winput(bind=day_text_changed, width=40, text=datetime.now().hour)
+minute_text = winput(bind=month_text_changed, width=40, text=datetime.now().minute)
 scene.append_to_caption('   ')
 button(bind=date_submitted, text="OK")
 
+# Time Options
 scene.append_to_caption('\n\n')
+wtext(text="Time Factor:  ")
+slider(bind=timescale_changed, length=400, text="time")
+time_scale_text = wtext(text=" * 10 ^ 0")
 
+# Scroll Options
+scene.append_to_caption('\n\n')
 checkbox(bind=scroll_to_zoom_clicked, text='Scroll to zoom')
 scene.append_to_caption('\n\n')
 
+# Slider
 slider(bind=slider_moved, length=2000)
 scene.append_to_caption('\n\n')
