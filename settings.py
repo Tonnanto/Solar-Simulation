@@ -7,3 +7,4 @@ class Settings:
     time_factor: int = 1
     date: datetime = datetime.now()
     timestamp: int = datetime.timestamp(datetime.now())
+    scrollToZoom = False
