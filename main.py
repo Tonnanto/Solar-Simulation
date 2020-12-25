@@ -52,14 +52,16 @@ def draw_planets():
     return
 
 
-# merc_orbit = Orbit(N = 48.33167, i = 7.00487, w = 77.45645, a = 0.38709893, e = 0.20563069, M = 252.25084)
-# merc_orbit.draw(100)
-# venus_orbit = Orbit(N = 76.68069, i = 3.39471, w = 131.53298, a = 0.72333199, e = 0.00677323, M = 181.97973)
-# venus_orbit.draw(100)
-# earth_orbit = Orbit(N = -11.26064, i = 0, w = 102.94719, a = 1.00000011, e = 0.01671022, M = 100.46435)
-# earth_orbit.draw(100)
-# mars_orbit = Orbit(N = 49.57854, i = 1.85061, w = 336.04084, a = 1.52366231, e = 0.09341233, M = 355.45332)
-# mars_orbit.draw(100)
+def run():
+    while Settings.play:
+        if datetime.timestamp(datetime.now()) - Settings.timestamp > 0.1:
+            set_date(Settings.date + timedelta(
+                seconds=(datetime.timestamp(datetime.now()) - Settings.timestamp) * Settings.time_factor))
+            for planet in planets:
+                planet.move(Settings.date)
+
+            Settings.timestamp = datetime.timestamp(datetime.now())
+
 
 def date_submitted(b: button):
     try:
@@ -68,12 +70,12 @@ def date_submitted(b: button):
         year = int(year_text.text)
         hour = int(hour_text.text)
         minute = int(minute_text.text)
-        date = datetime(day=day, month=month, year=year, hour=hour, minute=minute)
+        Settings.date = datetime(day=day, month=month, year=year, hour=hour, minute=minute)
 
-        print(date.strftime("%d.%m.%Y  %H:%M"))
+        print(Settings.date.strftime("%d.%m.%Y  %H:%M"))
 
         for planet in planets:
-            planet.move(date)
+            planet.move(Settings.date)
 
     except ValueError:
         print("Invalid number!")
@@ -106,26 +108,34 @@ def focus_object(b: button):
 def play_button_clicked(b: button):
     Settings.play = not Settings.play
     if Settings.play:
-        play_button.text = "⏵"
-    else:
         play_button.text = "⏸"
+        run()
+    else:
+        play_button.text = "⏵"
 
 
 def timescale_changed(s: slider):
-    value = int(s.value * 100.0)
-    time_scale_text.text = " * 10 ^ " + str(value)
-    Settings.time_factor = 10 ** value
+    value = s.value * 28.0
+    time_scale_text.text = " * 2 ^ " + str(value)
+    Settings.time_factor = 2 ** value
 
 
 def scroll_to_zoom_clicked(r):
     scrollToZoom = r.checked
 
 
-def slider_moved(s):
-    date = datetime.now() + timedelta(days=int(s.value * 10000))
+def set_date(date: datetime):
+    Settings.date = date
     day_text.text = date.strftime("%d")
     month_text.text = date.strftime("%m")
     year_text.text = date.strftime("%Y")
+    hour_text.text = date.strftime("%H")
+    minute_text.text = date.strftime("%M")
+
+
+def slider_moved(s):
+    date = datetime.now() + timedelta(days=int(s.value * 10000))
+    set_date(date)
     for planet in planets:
         planet.move(date)
 
@@ -162,7 +172,7 @@ button(bind=date_submitted, text="OK")
 scene.append_to_caption('\n\n')
 wtext(text="Time Factor:  ")
 slider(bind=timescale_changed, length=400, text="time")
-time_scale_text = wtext(text=" * 10 ^ 0")
+time_scale_text = wtext(text=" * 2 ^ 0")
 
 # Scroll Options
 scene.append_to_caption('\n\n')
