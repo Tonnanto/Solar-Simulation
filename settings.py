@@ -1,10 +1,13 @@
 from datetime import datetime
 
+from util import calc_days
+
 
 class Settings:
     center_object = None
+    zoomed_in: bool = False
     play: bool = True
     time_factor: int = 1
-    date: datetime = datetime.now()
-    timestamp: int = datetime.timestamp(datetime.now())
+    days: float = calc_days(datetime.now())
+
     scrollToZoom = False

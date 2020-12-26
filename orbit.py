@@ -65,23 +65,4 @@ class Orbit:
 
         return vec(x, y, z)
 
-    # def move(day):
-    #     E = self.M + self.e * (180 / pi) * sin(self.M) * (1.0 + self.e * cos(self.M)) # eccentric anomaly [°]
-    #
-    #     xv = r * cos(v) = a * ( cos(E) - e )
-    #     yv = r * sin(v) = a * ( sqrt(1.0 - e*e) * sin(E) )
-    #
-    #     v = atan2( yv, xv )
-    #     r = sqrt( xv*xv + yv*yv )
-    #
-    #     x = r * (cos(self.N) * cos(v + self.w) - sin(self.N) * sin(v + self.w) * cos(self.i))
-    #     y = r * (sin(self.N) * cos(v + self.w) + cos(self.N) * sin(v + self.w) * cos(self.i))
-    #     z = r * (sin(v + self.w) * sin(self.i))
 
-
-def calc_days(date: datetime):
-    y: int = date.year
-    m: int = date.month
-    D: int = date.day
-
-    return 367 * y - 7 * (y + (m + 9) / 12) / 4 - 3 * ((y + (m - 9) / 7) / 100 + 1) / 4 + 275 * m / 9 + D - 730515

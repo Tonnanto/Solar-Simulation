@@ -1,6 +1,6 @@
 from vpython import *
 from astro_object import Astro_Object
-from orbit import calc_days
+from util import calc_days
 from datetime import datetime
 from settings import Settings
 
@@ -13,25 +13,16 @@ class Planet(Astro_Object):
         self.dist = dist
         self.orbit = orbit
         self.orbit.draw(1000, self.color)
-        self.move(datetime.now())
+        self.move_to_date(datetime.now())
 
-    # def drawOrbit(self, corners):
-    #     if self.home == None: return
-    #     theta = 0
-    #     dtheta = pi / corners
-    #     r = self.dist
-    #     circle_list = []
-    #     while (theta <= 2*pi):
-    #         circle_list.append(vec(r * cos(theta), r * sin(theta), 0))
-    #         theta += dtheta
-    #
-    #     circle = curve(pos = circle_list, color = self.color)
+    def move_to_date(self, date: datetime):
+        self.move(calc_days(date))
 
-    def move(self, date):
+    def move(self, days: float):
         if self.orbit is None:
             return
         # E = M + e*(180/pi) * sin(M) * ( 1.0 + e * cos(M) )
-        M = self.orbit.M + self.orbit.m * calc_days(date)
+        M = self.orbit.M + self.orbit.m * days
         E = M + self.orbit.e * (180 / pi) * sin(radians(M)) * (1.0 + self.orbit.e * cos(radians(M)))
 
         loc = self.orbit.get_loc(radians(E))
@@ -41,16 +32,4 @@ class Planet(Astro_Object):
         if Settings.center_object == self:
             scene.center = self.sphere.pos
 
-        self.updateLabel()
-
-    # def move(self, vector):
-    #     for i in range(1000):
-    #         rate(1000)
-    #         self.sphere.pos = self.sphere.pos + vector
-    #         dist = (self.sphere.pos.x ** 2 + self.sphere.pos.y ** 2 + self.sphere.pos.z ** 2) ** 0.5
-    #         rad_vec = (self.sphere.pos - self.home.sphere.pos) / dist
-    #         fgrav = -10000 * rad_vec / dist ** 2
-    #         vector = vector + fgrav
-    #         self.sphere.pos += vector
-    #         self.updateLabel()
-    #         if dist <= self.home.sphere.radius: break
+        self.update_label()

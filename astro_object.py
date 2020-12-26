@@ -10,5 +10,5 @@ class Astro_Object:
         self.sphere = sphere(radius = radius, color = color)
         self.label = label(text = name, xoffset = 20, yoffset = 20)
 
-    def updateLabel(self):
+    def update_label(self):
         self.label.pos = self.sphere.pos

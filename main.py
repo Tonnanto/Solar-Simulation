@@ -6,6 +6,7 @@ from astro_object import Astro_Object
 from orbit import Orbit
 from planet import Planet
 from settings import Settings
+from util import calc_days
 
 
 class Main:
@@ -53,6 +54,15 @@ class Main:
 
         return
 
+    @staticmethod
+    def handle_events():
+
+        # ev = scene.waitfor('click')
+        # if ev == 'click':
+        #     print("click")
+
+        return
+
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # ++                                                  WIDGETS                                                   ++
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -63,7 +73,6 @@ class Main:
     month_text: winput
     year_text: winput
     hour_text: winput
-    minute_text: winput
 
     time_scale_text: wtext
 
@@ -94,6 +103,9 @@ class Main:
         button(bind=Main.focus_object, text="Uranus")
         button(bind=Main.focus_object, text="Neptune")
         button(bind=Main.focus_object, text="Pluto")
+        scene.append_to_caption('   ')
+        button(bind=Main.zoom_in, text="Zoom in")
+        button(bind=Main.zoom_out, text="Zoom out")
 
     @staticmethod
     def setup_date_controls():
@@ -103,7 +115,6 @@ class Main:
         Main.month_text = winput(bind=None, width=40, text=datetime.now().month)
         Main.year_text = winput(bind=None, width=80, text=datetime.now().year)
         Main.hour_text = winput(bind=None, width=40, text=datetime.now().hour)
-        Main.minute_text = winput(bind=None, width=40, text=datetime.now().minute)
         scene.append_to_caption('   ')
         button(bind=Main.date_submitted, text="OK")
 
@@ -127,13 +138,13 @@ class Main:
             month = int(Main.month_text.text)
             year = int(Main.year_text.text)
             hour = int(Main.hour_text.text)
-            minute = int(Main.minute_text.text)
-            Settings.date = datetime(day=day, month=month, year=year, hour=hour, minute=minute)
+            date = datetime(day=day, month=month, year=year, hour=hour)
+            Settings.days = calc_days(date)
 
-            print(Settings.date.strftime("%d.%m.%Y  %H:%M"))
+            print(date.strftime("%d.%m.%Y  %H"))
 
             for planet in Main.planets:
-                planet.move(Settings.date)
+                planet.move(Settings.days)
 
         except ValueError:
             print("Invalid number!")
@@ -143,12 +154,40 @@ class Main:
         if b.text == "Sun":
             Settings.center_object = Main.sun
             scene.center = Main.sun.sphere.pos
-            return
 
-        for planet in Main.planets:
-            if planet.name == b.text:
-                Settings.center_object = planet
-                scene.center = planet.sphere.pos
+        else:
+            for planet in Main.planets:
+                if planet.name == b.text:
+                    Settings.center_object = planet
+                    scene.center = planet.sphere.pos
+
+        if Settings.zoomed_in:
+            Main.zoom_in()
+
+    @staticmethod
+    def zoom_in():
+        d = Settings.center_object.radius * 5
+        move = abs(scene.range - d) / 100
+
+        while scene.range > d:
+            rate(500)
+            scene.range -= move
+
+        scene.range = d
+        Settings.zoomed_in = True
+
+    @staticmethod
+    def zoom_out():
+        d = 8809032837
+        move = abs(scene.range - d) / 100
+
+        while scene.range < d:
+            rate(500)
+            scene.range += move
+
+        scene.range = d
+        Settings.zoomed_in = False
+
 
     @staticmethod
     def play_button_clicked(b: button):
@@ -170,9 +209,7 @@ class Main:
 
     @staticmethod
     def set_date(date: datetime):
-        Settings.date = date
         Main.day_text.text = date.strftime("%d")
         Main.month_text.text = date.strftime("%m")
         Main.year_text.text = date.strftime("%Y")
         Main.hour_text.text = date.strftime("%H")
-        Main.minute_text.text = date.strftime("%M")
