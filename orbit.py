@@ -2,7 +2,6 @@ from datetime import datetime
 
 from vpython import *
 
-
 # The primary orbital elements are here denoted as:
 #     N = longitude of the ascending node
 #     i = inclination to the ecliptic (plane of the Earth's orbit)
@@ -19,50 +18,121 @@ from vpython import *
 #     T  = Epoch_of_M - (M(deg)/360_deg) / P  = time of perihelion
 #     v  = true anomaly (angle between position and perihelion)
 #     E  = eccentric anomaly
+from util import au_to_km
 
 
 class Orbit:
 
-    def __init__(self, N, i, w, a, e, M, m):
-        self.N = N
-        self.i = i
-        self.w = w
-        self.a = a * 149_597_870
-        self.e = e
-        self.M = M
-        self.m = m
+    def __init__(self, dic: {str: any}):
+        self.a = dic['a']  # AU
+        self.e = dic['e']  # value [0 ... 1]
+        self.I = dic['I']  # degrees
+        self.L = dic['L']  # degrees
+        self.o = dic['o']  # degrees
+        self.O = dic['O']  # degrees
+        self._a = dic['~a']  # AU per century
+        self._e = dic['~e']  # change per century
+        self._I = dic['~I']  # degrees per century
+        self._L = dic['~L']  # degrees per century
+        self._o = dic['~o']  # degrees per century
+        self._O = dic['~O']  # degrees per century
 
-        # self.w1 = N + w
-        # self.L = M + self.w1
-        # self.q = a * (1 - e)
-        # self.Q = a * (1 + e)
-        # self.P = a ** 1.5
-        # self.T = Epoch_of_M - (M / 360) / self.P
+        # only relevant for jupiter - pluto
+        self.b, self.c, self.s, self.f = 0, 0, 0, 0
 
-    def draw(self, corners, color):
+        if 'b' in dic:
+            self.b = dic['b']
+        if 'c' in dic:
+            self.c = dic['c']
+        if 's' in dic:
+            self.s = dic['s']
+        if 'f' in dic:
+            self.f = dic['f']
+
+        self.T = (datetime.now().year - 2000) / 100
+        self.color = None
+        self.center = vec(0, 0, 0)
+        self.circle = None
+
+    def draw(self, corners, color, center, T=None):
+        self.color = color
+        self.center = center
+        if T is None:
+            T = self.T
+        else:
+            self.T = T
         theta = 0
-        dtheta = pi / corners
+        dtheta = 360.0 / corners
         orbit_list = []
 
-        while theta <= 2 * pi:
-            orbit_list.append(self.get_loc(theta))
+        while theta <= 360 + dtheta:
+            orbit_list.append(self.get_loc(theta, T) + center)
             theta += dtheta
 
-        circle = curve(pos=orbit_list, color=color)
+        if self.circle is not None:
+            self.circle.visible = False
+            del self.circle
 
-    def get_loc(self, E):
-        xv = self.a * (cos(E) - self.e)
-        yv = self.a * (sqrt(1.0 - self.e * self.e) * sin(E))
+        self.circle = curve(pos=orbit_list, color=color)
 
-        v = atan2(yv, xv)  # true anomaly
-        r = sqrt(xv * xv + yv * yv)  # distance from sun
+    def get_loc_by_day(self, d):
+        T = d / 36525  # Centuries past J2000.0
+        if abs(self.T - T) > 0.1:
+            self.draw(1000, self.color, self.center, T)
+        return self.get_loc(self.get_eccentric_anomaly(T), T)
 
-        x = r * (cos(radians(self.N)) * cos(v + radians(self.w)) - sin(radians(self.N)) * sin(
-            v + radians(self.w)) * cos(radians(self.i)))
-        y = r * (sin(radians(self.N)) * cos(v + radians(self.w)) + cos(radians(self.N)) * sin(
-            v + radians(self.w)) * cos(radians(self.i)))
-        z = r * (sin(v + radians(self.w)) * sin(radians(self.i)))
+    def get_eccentric_anomaly(self, T):
+        e = self.e + self._e * T
+        L = self.L + self._L * T
+        o = self.o + self._o * T
+
+        M = 0.0
+        if -30 < T < 30:  # between 3000 BC and 3000 AC
+            M = L - o + self.b * T ** 2 + self.c * cos(self.f * T) + self.s * sin(self.f * T)
+        else:
+            M = L - o
+
+        M %= 360
+        if M > 180:
+            M -= 360
+
+        e_ = e * 57.29577951  # e in degrees
+        tol = 10 ** (-6)  # tolerance
+
+        # E: float = M + e_ * sin(radians(M))  # start value
+        #
+        # while True:
+        #     d_M = M - (E - e_ * sin(radians(E)))
+        #     d_E = d_M / (1 - e_ * cos(radians(E)))
+        #     if abs(d_E) < tol:
+        #         break
+        #     E += d_E
+
+        E: float = M + e * sin(radians(M)) + 0.5 * e**2 * sin(radians(2*M))  # approximation of Kepler Equation
+
+        return E
+
+    def get_loc(self, E, T=None):
+        if T is None:
+            T = self.T
+
+        a = au_to_km(self.a + self._a * T)
+        e = self.e + self._e * T
+        I = self.I + self._I * T
+        o = self.o + self._o * T
+        O = self.O + self._O * T
+        arg_per = o - O
+
+        # Coordinates in orbital plane
+        x_orb = a * (cos(radians(E)) - e)
+        y_orb = a * (1 - e ** 2) ** 0.5 * sin(radians(E))
+
+        cos_o, sin_o = cos(radians(arg_per)), sin(radians(arg_per))
+        cos_O, sin_O = cos(radians(O)), sin(radians(O))
+        cos_I, sin_I = cos(radians(I)), sin(radians(I))
+
+        x = (cos_o * cos_O - sin_o * sin_O * cos_I) * x_orb + (-sin_o * cos_O - cos_o * sin_O * cos_I) * y_orb
+        y = (cos_o * sin_O + sin_o * cos_O * cos_I) * x_orb + (-sin_o * sin_O + cos_o * cos_O * cos_I) * y_orb
+        z = (sin_o * sin_I) * x_orb + (cos_o * sin_I) * y_orb
 
         return vec(x, y, z)
-
-

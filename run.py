@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from main import Main
-from planet import *
+from satellite import *
 from settings import Settings
 
 # x_axis = curve(pos=[vec(0, 0, 0), vec(200_000_000, 0, 0)], color=color.white)
@@ -19,12 +19,10 @@ def run():
 
     while True:
 
-        Main.handle_events()
-
         if Settings.play:
             now = datetime.timestamp(datetime.now())
 
-            if now - timestamp > 0.025:
+            if now - timestamp > 0.00025:
                 Settings.days = Settings.days + (datetime.timestamp(
                     datetime.now()) - timestamp) / 60 / 60 / 24 * Settings.time_factor
                 # Main.set_date(Settings.date + timedelta(

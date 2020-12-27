@@ -4,9 +4,11 @@ from vpython import *
 
 from astro_object import Astro_Object
 from orbit import Orbit
-from planet import Planet
+from satellite import Satellite
 from settings import Settings
 from util import calc_days
+
+import json
 
 
 class Main:
@@ -19,49 +21,70 @@ class Main:
         Settings.center_object = Main.sun
 
         Main.draw_planets()
+        Main.draw_moons()
 
         Main.setup_widgets()
 
     @staticmethod
     def draw_planets():
-        Main.planets.append(Planet(name="Mercury", radius=2_439.7, color=color.orange, home=Main.sun,
-                                   orbit=Orbit(N=48.3313, i=7.0047, w=29.1241, a=0.387098, e=0.205635, M=168.6562,
-                                               m=4.0923344368)))
-        Main.planets.append(Planet(name="Venus", radius=6_051.8, color=color.cyan, home=Main.sun,
-                                   orbit=Orbit(N=76.6799, i=3.3946, w=54.8910, a=0.723330, e=0.006773, M=48.0052,
-                                               m=1.6021302244)))
-        Main.planets.append(Planet(name="Earth", radius=6_371, color=color.blue, home=Main.sun,
-                                   orbit=Orbit(N=-11.26064, i=0, w=102.94719, a=1.00000011, e=0.01671022, M=100.46435,
-                                               m=1)))  # m is guessed
-        Main.planets.append(Planet(name="Mars", radius=3_389.5, color=color.red, home=Main.sun,
-                                   orbit=Orbit(N=49.5574, i=1.8497, w=286.5016, a=1.523688, e=0.093405, M=18.6021,
-                                               m=0.5240207766)))
-        Main.planets.append(Planet(name="Jupiter", radius=69_911, color=color.white, home=Main.sun,
-                                   orbit=Orbit(N=100.4542, i=1.3030, w=273.8777, a=5.20256, e=0.048498, M=19.8950,
-                                               m=0.0830853001)))
-        Main.planets.append(Planet(name="Saturn", radius=58_232, color=color.orange, home=Main.sun,
-                                   orbit=Orbit(N=113.6634, i=2.4886, w=339.3939, a=9.55475, e=0.055546, M=316.9670,
-                                               m=0.0334442282)))
-        Main.planets.append(Planet(name="Uranus", radius=25_362, color=color.blue, home=Main.sun,
-                                   orbit=Orbit(N=74.0005, i=0.7733, w=96.6612, a=19.18171, e=0.047318, M=142.5905,
-                                               m=0.011725806)))
-        Main.planets.append(Planet(name="Neptune", radius=24_622, color=color.cyan, home=Main.sun,
-                                   orbit=Orbit(N=131.7806, i=1.7700, w=272.8461, a=30.05826, e=0.008606, M=260.2471,
-                                               m=0.005995147)))
-        Main.planets.append(Planet(name="Pluto", radius=1_188.3, color=color.white, home=Main.sun,
-                                   orbit=Orbit(N=110.30, i=17.14001, w=113.76, a=39.4821, e=0.24883, M=14.53,
-                                               m=0.003973966)))
+
+        resources = [
+            ("mercury", color.orange),
+            ("venus", color.cyan),
+            ("earth", color.blue),
+            ("mars", color.red),
+            ("jupiter", color.white),
+            ("saturn", color.orange),
+            ("uranus", color.cyan),
+            ("neptune", color.blue),
+            ("pluto", color.white)
+        ]
+
+        for res in resources:
+            with open('resources/' + res[0] + '.json') as json_file:
+                dic = json.load(json_file)
+                Main.planets.append(Satellite(dic, home=Main.sun, clr=res[1]))
+
+        # Main.planets.append(Satellite(name="Mercury", radius=2_439.7, color=color.orange, home=Main.sun,
+        #                               orbit=Orbit(N=48.3313, i=7.0047, w=29.1241, a=0.387098, e=0.205635, M=168.6562,
+        #                                           m=4.0923344368)))
+        # Main.planets.append(Satellite(name="Venus", radius=6_051.8, color=color.cyan, home=Main.sun,
+        #                               orbit=Orbit(N=76.6799, i=3.3946, w=54.8910, a=0.723330, e=0.006773, M=48.0052,
+        #                                           m=1.6021302244)))
+        # Main.planets.append(Satellite(name="Earth", radius=6_371, color=color.blue, home=Main.sun,
+        #                               orbit=Orbit(N=-11.26064, i=0, w=102.94719, a=1.00000011, e=0.01671022,
+        #                                           M=100.46435,
+        #                                           m=0.9856091020)))
+        # Main.planets.append(Satellite(name="Mars", radius=3_389.5, color=color.red, home=Main.sun,
+        #                               orbit=Orbit(N=49.5574, i=1.8497, w=286.5016, a=1.523688, e=0.093405, M=18.6021,
+        #                                           m=0.5240207766)))
+        # Main.planets.append(Satellite(name="Jupiter", radius=69_911, color=color.white, home=Main.sun,
+        #                               orbit=Orbit(N=100.4542, i=1.3030, w=273.8777, a=5.20256, e=0.048498, M=19.8950,
+        #                                           m=0.0830853001)))
+        # Main.planets.append(Satellite(name="Saturn", radius=58_232, color=color.orange, home=Main.sun,
+        #                               orbit=Orbit(N=113.6634, i=2.4886, w=339.3939, a=9.55475, e=0.055546, M=316.9670,
+        #                                           m=0.0334442282)))
+        # Main.planets.append(Satellite(name="Uranus", radius=25_362, color=color.blue, home=Main.sun,
+        #                               orbit=Orbit(N=74.0005, i=0.7733, w=96.6612, a=19.18171, e=0.047318, M=142.5905,
+        #                                           m=0.011725806)))
+        # Main.planets.append(Satellite(name="Neptune", radius=24_622, color=color.cyan, home=Main.sun,
+        #                               orbit=Orbit(N=131.7806, i=1.7700, w=272.8461, a=30.05826, e=0.008606, M=260.2471,
+        #                                           m=0.005995147)))
+        # Main.planets.append(Satellite(name="Pluto", radius=1_188.3, color=color.white, home=Main.sun,
+        #                               orbit=Orbit(N=110.30, i=17.14001, w=113.76, a=39.4821, e=0.24883, M=14.53,
+        #                                           m=0.003973966)))
 
         return
 
     @staticmethod
-    def handle_events():
-
-        # ev = scene.waitfor('click')
-        # if ev == 'click':
-        #     print("click")
-
-        return
+    def draw_moons():
+        for planet in Main.planets:
+            if planet.name == "Earth":
+                # planet.set_satellites([Satellite(name="Moon", radius=1738.1, color=color.white, home=None,
+                #                                orbit=Orbit(N=125.1228, i=5.145, w=318.0634, a=0.002569555302, e=0.0549,
+                #                                            M=115.3654,
+                #                                            m=13.0649929509))])
+                break
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # ++                                                  WIDGETS                                                   ++
@@ -188,7 +211,6 @@ class Main:
         scene.range = d
         Settings.zoomed_in = False
 
-
     @staticmethod
     def play_button_clicked(b: button):
         Settings.play = not Settings.play
@@ -213,3 +235,8 @@ class Main:
         Main.month_text.text = date.strftime("%m")
         Main.year_text.text = date.strftime("%Y")
         Main.hour_text.text = date.strftime("%H")
+
+# Main.setup()
+# for p in Main.planets:
+#     for i in range(500):
+#         p.orbit.get_loc_by_day(i*3)
