@@ -52,7 +52,8 @@ class Orbit:
         self.T = (datetime.now().year - 2000) / 100
         self.color = None
         self.center = vec(0, 0, 0)
-        self.circle = None
+        self.curve = None
+        self.refresh_interval = 1 / (abs(self._a) + abs(self._e) + abs(self._I) + abs(self._o) + abs(self._O))
 
     def draw(self, corners, color, center, T=None):
         self.color = color
@@ -69,15 +70,16 @@ class Orbit:
             orbit_list.append(self.get_loc(theta, T) + center)
             theta += dtheta
 
-        if self.circle is not None:
-            self.circle.visible = False
-            del self.circle
+        if self.curve is not None:
+            self.curve.visible = False
+            del self.curve
 
-        self.circle = curve(pos=orbit_list, color=color)
+        self.curve = curve(pos=orbit_list, color=color)
+        return
 
     def get_loc_by_day(self, d):
         T = d / 36525  # Centuries past J2000.0
-        if abs(self.T - T) > 0.1:
+        if abs(self.T - T) > self.refresh_interval:
             self.draw(1000, self.color, self.center, T)
         return self.get_loc(self.get_eccentric_anomaly(T), T)
 

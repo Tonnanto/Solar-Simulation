@@ -1,27 +1,27 @@
+import json
 from datetime import datetime
 
 from vpython import *
 
-from astro_object import Astro_Object
-from orbit import Orbit
+from astroobject import AstroObject
 from satellite import Satellite
 from settings import Settings
-from util import calc_days
-
-import json
+from util import calc_days, calc_date, au_to_km
 
 
 class Main:
-    sun: Astro_Object
+    sun: AstroObject
     planets = []
 
     @staticmethod
     def setup():
-        Main.sun = Astro_Object(name="Sun", radius=696340, color=color.yellow)
+        Main.sun = AstroObject(name="Sun", radius=696340, color=color.yellow)
         Settings.center_object = Main.sun
 
+        background = sphere(pos=vec(0, 0, 0), texture="resources/stars_texture.jpg", radius=au_to_km(400), shininess=0)
+        scene.range = au_to_km(80)
+
         Main.draw_planets()
-        Main.draw_moons()
 
         Main.setup_widgets()
 
@@ -75,16 +75,6 @@ class Main:
         #                                           m=0.003973966)))
 
         return
-
-    @staticmethod
-    def draw_moons():
-        for planet in Main.planets:
-            if planet.name == "Earth":
-                # planet.set_satellites([Satellite(name="Moon", radius=1738.1, color=color.white, home=None,
-                #                                orbit=Orbit(N=125.1228, i=5.145, w=318.0634, a=0.002569555302, e=0.0549,
-                #                                            M=115.3654,
-                #                                            m=13.0649929509))])
-                break
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # ++                                                  WIDGETS                                                   ++
@@ -218,6 +208,7 @@ class Main:
             Main.play_button.text = "⏸"
         else:
             Main.play_button.text = "⏵"
+            Main.set_date(calc_date(Settings.days))
 
     @staticmethod
     def timescale_changed(s: slider):

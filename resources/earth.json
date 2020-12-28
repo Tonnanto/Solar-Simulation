@@ -19,8 +19,8 @@
   "satellites": [
     {
       "name": "Moon",
-      "radius": 6371,
-      "obliquity": 23.44,
+      "radius": 1737.4,
+      "obliquity": 1.5424,
       "orbit": {
         "a": 0.002569555302,
         "e": 0.054900,
